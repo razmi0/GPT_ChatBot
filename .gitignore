@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 # Keys
-secret.txt
+secret.js
