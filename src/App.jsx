@@ -16,7 +16,7 @@ const msgInitialState = {
   sentTime : new Date().toLocaleDateString()
 }
 
-const API_Key = "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"
+const ak = "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"
 
 function App() {
   const [messages, setMessages] = useState([msgInitialState]);
@@ -65,7 +65,7 @@ function App() {
     await fetch('https://api.openai.com/v1/chat/completions', {
       method : 'POST',
       headers : {
-        'Authorization' : `Bearer ${API_Key}`,
+        'Authorization' : `Bearer ${ak}`,
         'Content-Type' : 'application/json'
       },
       body : JSON.stringify(bodyRequest)
