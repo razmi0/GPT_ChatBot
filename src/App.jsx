@@ -1,98 +1,96 @@
-import { useState } from "react";
-import { ChatContainer, MainContainer, MessageList, Message, MessageInput, TypingIndicator } from "@chatscope/chat-ui-kit-react";
-import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
+import { useState } from 'react'
 import './App.css'
-
-
-const customStyle = {
-  position : "relative",
-  width : "500px",
-  height : "500px"
-}
-
-const msgInitialState = {
-  message : 'Hello !',
-  sender : 'user',
-  sentTime : new Date().toLocaleDateString()
-}
+import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
+import { MainContainer, ChatContainer, MessageList, Message, MessageInput, TypingIndicator } from '@chatscope/chat-ui-kit-react';
 
 const ak = "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"
+const systemMessage = { 
+  "role": "system", "content": "Explain with a very short and concise answer."
+}
 
 function App() {
-  const [messages, setMessages] = useState([msgInitialState]);
-  const [typing, setTyping] = useState(false);
-
-  const handleUserInput = async(msg) => {
-    const newMsg = {
-      msg,
-      sender : 'user',
-      sentTime : new Date().toLocaleDateString(),
-      direction : 'outgoing'
+  const [messages, setMessages] = useState([
+    {
+      message: "Ask me anything !",
+      sentTime: "just now",
+      sender: "ChatGPT"
     }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
 
-    const newMsgs = [...messages, newMsg];
-    setMessages(newMsgs);
-    setTyping(true);
+  const handleSend = async (message) => {
+    const newMessage = {
+      message,
+      direction: 'outgoing',
+      sender: "user"
+    };
 
-    await processMessageFromUser(newMsgs);
-  }
+    const newMessages = [...messages, newMessage];
+    setMessages(newMessages);
+    setIsTyping(true);
+    await processMessageToChatGPT(newMessages);
+  };
 
-  const processMessageFromUser = async(chatMsgs) => {
-    let apiMsgs = chatMsgs.map((objMsg) => {
-      let role = ""
-      if(objMsg.sender == 'ChatGPT'){
-        role = 'assistant'
+  async function processMessageToChatGPT(chatMessages) { 
+    // Format messages for chatGPT API
+    // API is expecting objects in format of { role: "user" or "assistant", "content": "message here"}
+    // So we need to reformat
+
+    let apiMessages = chatMessages.map((messageObject) => {
+      let role = "";
+      if (messageObject.sender === "ChatGPT") {
+        role = "assistant";
       } else {
-        role = 'user'
+        role = "user";
       }
-      return {
-        role : role,
-        content : objMsg.message
-      }
-    })
+      return { role: role, content: messageObject.message}
+    });
 
-    const systemMsg = {
-      role : "system",
-      content : "Just make very concise and short messages."
+    const apiRequestBody = {
+      "model": "gpt-3.5-turbo",
+      "messages": [
+        systemMessage,  // The system message DEFINES the logic of our chatGPT
+        ...apiMessages // The messages from our chat with ChatGPT
+      ]
     }
 
-    const bodyRequest = {
-      model : "gpt-3.5-turbo",
-      messages : [systemMsg,...apiMsgs]
-    }
-
-
-    await fetch('https://api.openai.com/v1/chat/completions', {
-      method : 'POST',
-      headers : {
-        'Authorization' : `Bearer ${ak}`,
-        'Content-Type' : 'application/json'
+    await fetch("https://api.openai.com/v1/chat/completions", 
+    {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + ak,
+        "Content-Type": "application/json"
       },
-      body : JSON.stringify(bodyRequest)
-    }).then(res => res.json())
-      .then(console.log)
-
+      body: JSON.stringify(apiRequestBody)
+    }).then((data) => {
+      return data.json();
+    }).then((data) => {
+      setMessages([...chatMessages, {
+        message: data.choices[0].message.content,
+        sender: "ChatGPT"
+      }]);
+      setIsTyping(false);
+    });
   }
-
 
   return (
-    <>
-    <div style={customStyle} >
-      <MainContainer>
-        <ChatContainer>
-          <MessageList
-          typingIndicator={typing ? <TypingIndicator content="Thinking..." /> : null}
-          >
-            {messages.map((msg,i) => {
-              return <Message key={i} model={msg} />
-            })}
-          </MessageList>
-          <MessageInput placeholder="Type message here" onSend={handleUserInput} />
-        </ChatContainer>
-      </MainContainer>
+    <div className="App">
+      <div style={{ position:"relative", height: "500px", width: "400px"  }}>
+        <MainContainer>
+          <ChatContainer>
+            <MessageList 
+              scrollBehavior="smooth" 
+              typingIndicator={isTyping ? <TypingIndicator content="Thinking..." /> : null}
+            >
+              {messages.map((message, i) => {
+                return <Message key={i} model={message} />
+              })}
+            </MessageList>
+            <MessageInput placeholder="Type message here" onSend={handleSend} />        
+          </ChatContainer>
+        </MainContainer>
+      </div>
     </div>
-      
-    </>
   )
 }
 
