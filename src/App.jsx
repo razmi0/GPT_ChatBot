@@ -3,7 +3,8 @@ import './App.css'
 import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 import { MainContainer, ChatContainer, MessageList, Message, MessageInput, TypingIndicator } from '@chatscope/chat-ui-kit-react';
 
-const ak = "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"
+const ak = '...'
+
 const systemMessage = { 
   "role": "system", "content": "Explain with a very short and concise answer."
 }
