@@ -55,23 +55,26 @@ function App() {
       ]
     }
 
-    await fetch("https://api.openai.com/v1/chat/completions", 
-    {
+    const fetchOptions = {
       method: "POST",
       headers: {
         "Authorization": "Bearer " + ak,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(apiRequestBody)
-    }).then((data) => {
-      return data.json();
-    }).then((data) => {
-      setMessages([...chatMessages, {
-        message: data.choices[0].message.content,
-        sender: "ChatGPT"
-      }]);
-      setIsTyping(false);
-    });
+      body: JSON.stringify(apiRequestBody),
+    }
+
+    await fetch("https://api.openai.com/v1/chat/completions", fetchOptions)
+      .then((data) => {return data.json();})
+      .then((data) => {
+        console.log(data);
+        setMessages([...chatMessages, {
+          message: data.choices[0].message.content,
+          sender: "ChatGPT"
+        }]);
+        setIsTyping(false);
+      });
+
   }
 
   return (
